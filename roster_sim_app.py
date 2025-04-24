@@ -206,7 +206,7 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
             boxstyle='round,pad=0.5',
             facecolor='honeydew',
             edgecolor='green',
-            linewidth=1.5,
+             linewidth=1.5,
             alpha=0.85
         )
     )
