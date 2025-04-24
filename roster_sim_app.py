@@ -189,7 +189,7 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
     #         y_max*0.5,
     #         "Prosecutor’s\nPoisson Fallacy\nband",
     #         ha='center', va='center',
-    #         fontsize=10, color='dimgray',
+    #         fontsize=10, color='dimgray',,
     #         bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='dimgray', alpha=0.8))    
 
     plt.tight_layout()
