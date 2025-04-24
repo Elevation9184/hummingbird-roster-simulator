@@ -100,7 +100,7 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
 
     # Axes & title
     ax.set_title(
-        f"Compressed roster view — {title_suffix}: Nurse {winner_idx+1} ({c_max} events)\nSo where should (statistical) suspicion be flagged from where there is no direct evidence?",
+        f"Compressed roster view — {title_suffix}: Nurse {winner_idx+1} ({c_max} events)\nSo where should (statistical) suspicion start from where there is no direct evidence?",
         pad=6,
     )
 
@@ -137,7 +137,7 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
     y_max = ax.get_ylim()[1]
     ax.text(binom_95,    # a small horizontal offset
         y_max + 8,         # near the top of the plot
-        "Naïve '1-in-20' threshold (Binomial)\nHigh risk of false positives",
+        "Model-mismatch zone:\nUsing a coin-flip ruler in a Poisson world",
         rotation=270,
         va='top',
         ha='center',
@@ -170,27 +170,46 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
         bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='green'))
 
     # Prosecutor’s Poisson Fallacy arrow & centred box
-    y_fallacy = 6.5
-    mid_x = (binom_cut + poisson_cut) / 2
-    ax.annotate('', xy=(poisson_cut, y_fallacy), xytext=(binom_cut, y_fallacy),
+    y_fallacy = 5.5
+    mid_x = (binom_95 + poisson_cut) / 2
+    ax.annotate('', xy=(poisson_cut, y_fallacy), xytext=(binom_95, y_fallacy),
                 arrowprops=dict(arrowstyle='<->', color='dimgray', lw=2), zorder=1)
-    ax.text(mid_x, y_fallacy, "Prosecutor's\nPoisson Fallacy", ha='center', va='center',
-            rotation=270, zorder=2,
+    
+    ax.text(mid_x, y_fallacy, "Prosecutor's\nPoisson Fallacy Region", ha='center', va='center',
+            rotation=0, zorder=2,
             bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='black'))
 
     # Legend — red squares inside brackets using emoji (robust across back‑ends)
     legend_title = "Red Line Stats Thresholds"
     ax.legend(loc='upper right', framealpha=0.92, title=legend_title)
 
-
-    # # fill between purple and green, behind everything else
-    # ax.axvspan(binom_cut, binom_cut, color='grey', alpha=0.08, zorder=0)
-    # ax.text((binom_cut + binom_cut)/2,
-    #         y_max*0.5,
-    #         "Prosecutor’s\nPoisson Fallacy\nband",
-    #         ha='center', va='center',
-    #         fontsize=10, color='dimgray',,
-    #         bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='dimgray', alpha=0.8))    
+    # place behind everything (zorder=0)
+    ax.axvspan(binom_95, poisson_cut,
+            color='grey', alpha=0.07, zorder=0)    
+    
+    ax.text(
+        8, y_max +  8,
+        "Why Poisson, not Binomial?\n\n"
+        "Incidents in hospitals aren't like coin flips.\n"
+        "They're like random raindrops falling over time:\n"
+        "Workers with more shifts have wider 'umbrellas',\n"
+        "so naturally they catch more drops.\n\n"
+        "Treating incidents like biased coin flips risks\n" 
+        "false accusations based purely on workload.\n\n"
+        "A cluster of overlaps isn't suspicious by itself—\n"
+        "especially when there's no direct evidence.",
+        ha='center',
+        va='center',
+        fontsize=10,
+        color='darkgreen',
+        bbox=dict(
+            boxstyle='round,pad=0.5',
+            facecolor='honeydew',
+            edgecolor='green',
+            linewidth=1.5,
+            alpha=0.85
+        )
+    )
 
     plt.tight_layout()
     return fig
