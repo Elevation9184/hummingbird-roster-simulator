@@ -100,9 +100,10 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
 
     # Axes & title
     ax.set_title(
-        f"Compressed roster view — {title_suffix}: Nurse {winner_idx+1} at {c_max} co‑occurrences",
+        f"Compressed roster view — {title_suffix}: Nurse {winner_idx+1} ({c_max} events)\nSo where should (statistical) suspicion be flagged from where there is no direct evidence?",
         pad=6,
     )
+
     ax.set_xlabel("Compressed incident timeline (winner nurse only)")
     ax.set_yticks(range(1, n_nurses + 1))
     ax.set_yticklabels([f"Nurse {i}" for i in range(1, n_nurses + 1)])
@@ -118,10 +119,55 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
     right_edge = max(len(mapping), binom_cut, poisson_cut)
     ax.set_xlim(0.5, right_edge + 0.5)
     ax.set_xticks(list(range(1, right_edge + 1)))
-    ax.axvline(binom_cut, color='purple', linestyle='--', linewidth=2,
+    # Add in
+    # “Intuitive” 1-in-20 binomial line (95th percentile)
+    binom_95 = int(binom.ppf(0.95, n_incidents, p_winner))
+    ax.axvline(binom_95,
+            color='orange',
+            alpha=0.6,
+            linestyle='--',
+            linewidth=2,
+            label=f"Binomial 95 % ≈ {binom_95}")
+    ax.axvline(binom_cut, color='purple', linestyle='--', linewidth=2, alpha=0.6,
                label=f"Binomial 99.99% ≈ {binom_cut}")
-    ax.axvline(poisson_cut, color='green', linestyle='--', linewidth=2,
+    ax.axvline(poisson_cut, color='green', linestyle='--', linewidth=2, 
                label=f"Poisson 99.99% ≈ {poisson_cut}")
+    
+    # … annotate binomial 95% on-plot for clarity
+    y_max = ax.get_ylim()[1]
+    ax.text(binom_95,    # a small horizontal offset
+        y_max + 8,         # near the top of the plot
+        "Naïve '1-in-20' threshold (Binomial)\nHigh risk of false positives",
+        rotation=270,
+        va='top',
+        ha='center',
+        fontsize=10,
+        color='black',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='orange'))
+    
+    # … annotate 99.99% binomial on-plot for clarity
+    y_max = ax.get_ylim()[1]
+    ax.text(binom_cut,    # a small horizontal offset
+        y_max + 8,         # near the top of the plot
+        "Strict '1-in-10,000' threshold (Binomial)\nStill notable risk of false positives",
+        rotation=270,
+        va='top',
+        ha='center',
+        fontsize=10,
+        color='purple',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='purple'))
+
+    # … annotate 99.99% poisson on-plot for clarity
+    y_max = ax.get_ylim()[1]
+    ax.text(poisson_cut,    # a small horizontal offset
+        y_max + 8,         # near the top of the plot
+        "Investigation threshold (Poisson)\nCorrect model—high bar due to no direct evidence",
+        rotation=270,
+        va='top',
+        ha='center',
+        fontsize=10,
+        color='green',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='green'))
 
     # Prosecutor’s Poisson Fallacy arrow & centred box
     y_fallacy = 6.5
@@ -135,6 +181,16 @@ def plot_compressed_roster(roster, incident_vec, winner_idx, c_max,
     # Legend — red squares inside brackets using emoji (robust across back‑ends)
     legend_title = "Red Line Stats Thresholds"
     ax.legend(loc='upper right', framealpha=0.92, title=legend_title)
+
+
+    # # fill between purple and green, behind everything else
+    # ax.axvspan(binom_cut, binom_cut, color='grey', alpha=0.08, zorder=0)
+    # ax.text((binom_cut + binom_cut)/2,
+    #         y_max*0.5,
+    #         "Prosecutor’s\nPoisson Fallacy\nband",
+    #         ha='center', va='center',
+    #         fontsize=10, color='dimgray',
+    #         bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='dimgray', alpha=0.8))    
 
     plt.tight_layout()
     return fig
@@ -171,7 +227,7 @@ if st.sidebar.button("Simulate"):
     roster, incident_vec, counts, winner_idx, winner_fill, c_max = best_result
     fig = plot_compressed_roster(
         roster, incident_vec, winner_idx, c_max, winner_fill, n_incidents,
-        title_suffix=f"best of {runs} run{'s' if runs!=1 else ''}"
+        title_suffix=f"max incidents in {runs} run{'s' if runs!=1 else ''}"
     )
     st.pyplot(fig, use_container_width=True)
 else:
